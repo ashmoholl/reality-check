@@ -12,7 +12,7 @@ export default function PaywallScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Unlock Suggested Replies</Text>
       <Text style={styles.subtitle}>
-        Get emotionally intelligent, grounded messages you can send back — written in a human, 30-year-old voice.
+        Get emotionally intelligent, grounded messages you can send back.
       </Text>
 
       <TouchableOpacity style={styles.button} onPress={unlock}>

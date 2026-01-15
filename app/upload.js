@@ -1,16 +1,43 @@
-import { View, Text, Button, StyleSheet } from "react-native";
+import { View, Text, Button, StyleSheet, TouchableOpacity } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { analyzeImage } from "../utils/analyzeImage";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LoadingView from "../components/LoadingView";
 import { saveAnalysis } from "../utils/history";
 import { isPremium, canUseFreeUpload, recordFreeUpload } from "../utils/premium";
+import PremiumBadge from "../components/PremiumBadge";
+import Shimmer from "../components/Shimmer";
+
+
 
 export default function UploadScreen() {
   const [loading, setLoading] = useState(false);
+  const [freeUploadsLeft, setFreeUploadsLeft] = useState(null);
+  const [premium, setPremium] = useState(false);
+
+  useEffect(() => {
+    async function loadStatus() {
+      const premiumStatus = await isPremium();
+      setPremium(premiumStatus);
+
+      if (!premiumStatus) {
+        const { remaining } = await canUseFreeUpload();
+        setFreeUploadsLeft(remaining);
+      }
+    }
+
+    loadStatus();
+  }, []);
+
+  const isLocked = !premium && freeUploadsLeft === 0;
 
   async function pickImage() {
+    if (isLocked) {
+      router.push("/paywall");
+      return;
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       base64: true,
@@ -23,7 +50,6 @@ export default function UploadScreen() {
     const mime = asset.mimeType || "image/jpeg";
     const base64Image = `data:${mime};base64,${asset.base64}`;
 
-    const premium = await isPremium();
     if (!premium) {
       const { allowed } = await canUseFreeUpload();
       if (!allowed) {
@@ -61,11 +87,29 @@ export default function UploadScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Upload a Profile Screenshot</Text>
+      {premium && <PremiumBadge />}
 
-      <View style={{ marginTop: 40 }}>
-        <Button title="Upload Image" onPress={pickImage} />
-      </View>
+      <Text style={styles.title}>Upload a Screenshot of a Text Message or Dating Profile</Text>
+
+      {!premium && freeUploadsLeft !== null && (
+        <Text style={styles.counter}>
+          You have {freeUploadsLeft} free uploads left today
+        </Text>
+      )}
+        
+    <Shimmer>
+      <TouchableOpacity
+        style={[styles.uploadButton, isLocked && styles.lockedButton]}
+        onPress={pickImage}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.uploadText}>
+          {isLocked ? "Upload (Locked)" : "Upload Image"}
+        </Text>
+
+        {isLocked && <Text style={styles.lockIcon}>🔒</Text>}
+      </TouchableOpacity>
+    </Shimmer>
     </View>
   );
 }
@@ -75,14 +119,45 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F4E9D8",
     padding: 24,
+    justifyContent: "center",
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     color: "#264653",
     marginTop: 40,
+    textAlign: "center",
+  },
+  counter: {
+    marginTop: 12,
+    fontSize: 16,
+    textAlign: "center",
+    color: "#6B4F4F",
+  },
+  uploadButton: {
+    marginTop: 40,
+    backgroundColor: "#2A9D8F",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  lockedButton: {
+    backgroundColor: "#A8A8A8",
+  },
+  uploadText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  lockIcon: {
+    marginLeft: 8,
+    fontSize: 18,
   },
 });
+
+
 
 
 

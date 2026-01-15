@@ -1,4 +1,4 @@
-export async function analyzeImage(base64) {
+export async function analyzeImage(base64Image) {
   const response = await fetch(
     "https://reality-check-backend.vercel.app/api/analyze",
     {
@@ -7,16 +7,19 @@ export async function analyzeImage(base64) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        image: `data:image/jpeg;base64,${base64}`, // IMPORTANT FIX
+        image: base64Image, // already includes data:image/... prefix
       }),
     }
   );
 
   if (!response.ok) {
+    const errorText = await response.text();
+    console.log("Backend error:", errorText);
     throw new Error("Backend error");
   }
 
   const data = await response.json();
   return data;
 }
+
 

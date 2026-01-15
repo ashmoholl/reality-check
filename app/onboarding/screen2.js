@@ -29,11 +29,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "bold",
+    textAlign: "center",
     color: "#264653",
     marginBottom: 16,
   },
   subtitle: {
     fontSize: 18,
+    textAlign: "center",
     color: "#4A3F35",
     marginBottom: 40,
   },
