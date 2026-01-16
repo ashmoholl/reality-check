@@ -10,14 +10,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { text } = req.body;
+    const { image } = req.body;
+
+    if (!image) {
+      return res.status(400).json({ error: "No image provided" });
+    }
 
     const response = await client.responses.create({
-      model: "gpt-5-mini",
-      input: `
+      model: "gpt-4o-mini", // vision-capable model
+      input: [
+        {
+          role: "system",
+          content: `
 You are Reality Check, an emotionally intelligent dating analysis engine.
 
-Analyze the following message and return ONLY valid JSON with these fields:
+Analyze the screenshot and return ONLY valid JSON with these fields:
 
 {
   "honesty": "string",
@@ -31,9 +38,29 @@ Analyze the following message and return ONLY valid JSON with these fields:
   "date_meter": "string"
 }
 
-Message to analyze:
-${text}
-      `,
+Tone:
+- Warm, grounded, emotionally intelligent
+- No therapy jargon
+- No emojis in the JSON
+- No disclaimers
+- 2–4 sentences per section
+- suggested_reply = 1–2 sentences max
+          `,
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: "Analyze this dating screenshot and return the JSON.",
+            },
+            {
+              type: "input_image",
+              image_url: image,
+            },
+          ],
+        },
+      ],
       response_format: { type: "json" },
     });
 
@@ -42,6 +69,6 @@ ${text}
     return res.status(200).json(json);
   } catch (err) {
     console.error("ANALYSIS ERROR:", err);
-    return res.status(500).json({ error: "Failed to analyze message" });
+    return res.status(500).json({ error: "Failed to analyze image" });
   }
 }
