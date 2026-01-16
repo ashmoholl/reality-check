@@ -1,6 +1,6 @@
-import OpenAI from "openai";
+const OpenAI = require("openai");
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -47,4 +47,4 @@ ${text}
     console.error("ANALYSIS ERROR:", err);
     return res.status(500).json({ error: "Failed to analyze message" });
   }
-}
+};
