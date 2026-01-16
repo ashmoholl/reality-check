@@ -20,8 +20,8 @@ export default async function handler(req, res) {
       model: "gpt-4o-mini",
       input: [
         {
-          role: "system",
-          content: `
+          type: "input_text",
+          text: `
 You are Reality Check, an emotionally intelligent dating analysis engine.
 
 Analyze the screenshot and return ONLY valid JSON with these fields:
@@ -37,20 +37,19 @@ Analyze the screenshot and return ONLY valid JSON with these fields:
   "takeaways": "string",
   "date_meter": "string"
 }
+
+Tone:
+- Warm, grounded, emotionally intelligent
+- No therapy jargon
+- No emojis in the JSON
+- No disclaimers
+- 2–4 sentences per section
+- suggested_reply = 1–2 sentences max
           `,
         },
         {
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: "Analyze this dating screenshot and return the JSON.",
-            },
-            {
-              type: "input_image",
-              image_url: image,
-            },
-          ],
+          type: "input_image",
+          image_url: image,
         },
       ],
       response_format: { type: "json" },
