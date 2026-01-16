@@ -69,11 +69,20 @@ Tone:
         },
       ],
       text: {
-        format: { type: "json_object" },   // ⭐ FINAL FIX
+        format: { type: "json_object" },
       },
     });
 
-    const json = response.output[0].content[0].json;
+    // ⭐ FIXED JSON EXTRACTION
+    const raw = response.output_text;
+
+    let json;
+    try {
+      json = JSON.parse(raw);
+    } catch (e) {
+      console.error("JSON PARSE ERROR:", raw);
+      return res.status(500).json({ error: "Invalid JSON returned from model" });
+    }
 
     return res.status(200).json(json);
   } catch (err) {
