@@ -1,5 +1,10 @@
 const OpenAI = require("openai");
 
+// Move client OUTSIDE the handler to reduce bundle size
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -7,10 +12,6 @@ module.exports = async (req, res) => {
 
   try {
     const { text } = req.body;
-
-    const client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
 
     const response = await client.responses.create({
       model: "gpt-5-mini",
@@ -25,23 +26,19 @@ Analyze the following message and return ONLY valid JSON with these fields:
   "ghosting": "string",
   "flags": "string",
   "suggested_reply": "string",
-
-  "emojis": "string of emojis representing the vibe (🔥💚😬🚩 etc.)",
-  "vibe_score": "number from 0 to 100",
-  "takeaways": "Top 3 bullet points summarizing the deeper emotional insights",
-  "date_meter": "A fun rating of whether we would date this person"
+  "emojis": "string",
+  "vibe_score": "number",
+  "takeaways": "string",
+  "date_meter": "string"
 }
 
 Message to analyze:
 ${text}
       `,
-      response_format: {
-        type: "json",
-      },
+      response_format: { type: "json" },
     });
 
-    // FIXED LINE
-    const json = JSON.parse(response.output_text);
+    const json = response.output[0].content[0].json;
 
     return res.status(200).json(json);
   } catch (err) {
