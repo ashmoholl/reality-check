@@ -40,7 +40,8 @@ ${text}
       },
     });
 
-    const json = JSON.parse(response.output[0].content[0].text);
+    // FIXED LINE
+    const json = JSON.parse(response.output_text);
 
     return res.status(200).json(json);
   } catch (err) {
