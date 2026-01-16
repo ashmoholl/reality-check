@@ -69,7 +69,7 @@ Tone:
         },
       ],
       text: {
-        format: { type: "json" },   // ⭐ FIXED — must be an object
+        format: { type: "json_object" },   // ⭐ FINAL FIX
       },
     });
 
