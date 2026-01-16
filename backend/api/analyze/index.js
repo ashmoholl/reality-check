@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     }
 
     const response = await client.responses.create({
-      model: "gpt-4o-mini", // vision-capable model
+      model: "gpt-4o-mini",
       input: [
         {
           role: "system",
@@ -37,14 +37,6 @@ Analyze the screenshot and return ONLY valid JSON with these fields:
   "takeaways": "string",
   "date_meter": "string"
 }
-
-Tone:
-- Warm, grounded, emotionally intelligent
-- No therapy jargon
-- No emojis in the JSON
-- No disclaimers
-- 2–4 sentences per section
-- suggested_reply = 1–2 sentences max
           `,
         },
         {
