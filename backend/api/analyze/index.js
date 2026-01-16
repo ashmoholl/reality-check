@@ -52,7 +52,9 @@ Tone:
           image_url: image,
         },
       ],
-      response_format: { type: "json" },
+      text: {
+        format: "json",
+      },
     });
 
     const json = response.output[0].content[0].json;
