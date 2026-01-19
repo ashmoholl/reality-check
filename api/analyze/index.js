@@ -43,53 +43,14 @@ Return ONLY valid JSON. No emojis. No disclaimers.
         },
       ],
 
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "analysis",
-          schema: {
-            type: "object",
-            properties: {
-              honesty: { type: "string" },
-              effort: { type: "string" },
-              ghosting: { type: "string" },
-              flags: { type: "string" },
-              suggested_reply: { type: "string" },
-              vibe_score: { type: "number" },
-              takeaways: { type: "string" },
-              date_meter: { type: "string" },
-              texting_style: { type: "string" },
-              archetype_traits: { type: "string" },
-              archetype_strengths: { type: "string" },
-              archetype_weaknesses: { type: "string" },
-              archetype_like_signals: { type: "string" },
-              archetype_pullback_signals: { type: "string" },
-              archetype_compatibility: { type: "string" }
-            },
-            required: [
-              "honesty",
-              "effort",
-              "ghosting",
-              "flags",
-              "suggested_reply",
-              "vibe_score",
-              "takeaways",
-              "date_meter",
-              "texting_style",
-              "archetype_traits",
-              "archetype_strengths",
-              "archetype_weaknesses",
-              "archetype_like_signals",
-              "archetype_pullback_signals",
-              "archetype_compatibility"
-            ]
-          }
-        }
-      }
+      // ⭐ NEW REQUIRED FORMAT — replaces response_format
+      text: {
+        format: "json",
+      },
     });
 
-    // ⭐ Correct extraction for Responses API
-    const raw = response.output[0].content[0].text;
+    // ⭐ Correct extraction for Responses API with text.format:"json"
+    const raw = response.output_text;
 
     let json;
     try {
