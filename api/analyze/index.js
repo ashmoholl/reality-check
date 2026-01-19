@@ -25,7 +25,28 @@ module.exports = async (req, res) => {
           role: "system",
           content: `
 You are Reality Check, an emotionally intelligent dating analysis friend.
-Return ONLY valid JSON. No emojis. No disclaimers.
+
+Return ONLY valid JSON in this exact structure:
+
+{
+  "honesty": "",
+  "effort": "",
+  "ghosting": "",
+  "flags": "",
+  "suggested_reply": "",
+  "vibe_score": 0,
+  "takeaways": "",
+  "date_meter": "",
+  "texting_style": "",
+  "archetype_traits": "",
+  "archetype_strengths": "",
+  "archetype_weaknesses": "",
+  "archetype_like_signals": "",
+  "archetype_pullback_signals": "",
+  "archetype_compatibility": ""
+}
+
+No explanations. No commentary. No extra text.
           `,
         },
         {
@@ -33,7 +54,7 @@ Return ONLY valid JSON. No emojis. No disclaimers.
           content: [
             {
               type: "input_text",
-              text: "Analyze this dating screenshot and return the JSON.",
+              text: "Analyze this dating screenshot and fill in the JSON.",
             },
             {
               type: "input_image",
@@ -43,7 +64,6 @@ Return ONLY valid JSON. No emojis. No disclaimers.
         },
       ],
 
-      // ⭐ Correct format for JSON output
       text: {
         format: {
           type: "json_object"
@@ -51,7 +71,6 @@ Return ONLY valid JSON. No emojis. No disclaimers.
       }
     });
 
-    // ⭐ Correct extraction for json_object output
     const raw = response.output_text;
 
     if (!raw) {
