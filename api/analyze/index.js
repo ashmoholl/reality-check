@@ -43,13 +43,15 @@ Return ONLY valid JSON. No emojis. No disclaimers.
         },
       ],
 
-      // ⭐ NEW REQUIRED FORMAT — replaces response_format
+      // ⭐ Correct format for Responses API
       text: {
-        format: "json",
-      },
+        format: {
+          type: "json"
+        }
+      }
     });
 
-    // ⭐ Correct extraction for Responses API with text.format:"json"
+    // ⭐ Correct extraction for text.format JSON output
     const raw = response.output_text;
 
     let json;
