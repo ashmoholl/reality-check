@@ -1,14 +1,11 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "backend/api/**/*.js", "use": "@vercel/node" }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "backend/api/$1" }
-  ],
-  "build": {
-    "env": {
-      "VERCEL_IGNORE_BUILD_CACHE": "1"
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs18.x"
     }
-  }
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" }
+  ]
 }
