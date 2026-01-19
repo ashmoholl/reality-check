@@ -43,24 +43,16 @@ Return ONLY valid JSON. No emojis. No disclaimers.
         },
       ],
 
-      // ⭐ Correct format for Responses API
+      // ⭐ The correct, supported format
       text: {
         format: {
-          type: "json"
+          type: "json_object"
         }
       }
     });
 
-    // ⭐ Correct extraction for text.format JSON output
-    const raw = response.output_text;
-
-    let json;
-    try {
-      json = JSON.parse(raw);
-    } catch (e) {
-      console.error("JSON PARSE ERROR:", raw);
-      return res.status(500).json({ error: "Invalid JSON returned from model" });
-    }
+    // ⭐ Correct extraction for json_object output
+    const json = response.output[0].content[0].json;
 
     return res.status(200).json(json);
   } catch (err) {
