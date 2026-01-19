@@ -6,7 +6,7 @@ const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -43,7 +43,6 @@ Return ONLY valid JSON. No emojis. No disclaimers.
         },
       ],
 
-      // ⭐ ONLY THIS — no text.format
       response_format: {
         type: "json_schema",
         json_schema: {
@@ -59,16 +58,13 @@ Return ONLY valid JSON. No emojis. No disclaimers.
               vibe_score: { type: "number" },
               takeaways: { type: "string" },
               date_meter: { type: "string" },
-
-              // ⭐ GUARANTEED FIELD
               texting_style: { type: "string" },
-
               archetype_traits: { type: "string" },
               archetype_strengths: { type: "string" },
               archetype_weaknesses: { type: "string" },
               archetype_like_signals: { type: "string" },
               archetype_pullback_signals: { type: "string" },
-              archetype_compatibility: { type: "string" },
+              archetype_compatibility: { type: "string" }
             },
             required: [
               "honesty",
@@ -86,13 +82,14 @@ Return ONLY valid JSON. No emojis. No disclaimers.
               "archetype_like_signals",
               "archetype_pullback_signals",
               "archetype_compatibility"
-            ],
-          },
-        },
-      },
+            ]
+          }
+        }
+      }
     });
 
-    const raw = response.output_text;
+    // ⭐ Correct extraction for Responses API
+    const raw = response.output[0].content[0].text;
 
     let json;
     try {
@@ -107,4 +104,4 @@ Return ONLY valid JSON. No emojis. No disclaimers.
     console.error("ANALYSIS ERROR:", err);
     return res.status(500).json({ error: "Failed to analyze image" });
   }
-}
+};
