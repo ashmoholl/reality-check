@@ -1,20 +1,30 @@
-import { View, Text, Button, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { analyzeImage } from "../utils/analyzeImage";
 import { router } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import LoadingView from "../components/LoadingView";
 import { saveAnalysis } from "../utils/history";
 import { isPremium, canUseFreeUpload, recordFreeUpload } from "../utils/premium";
 import PremiumBadge from "../components/PremiumBadge";
 import Shimmer from "../components/Shimmer";
 
-
-
 export default function UploadScreen() {
   const [loading, setLoading] = useState(false);
   const [freeUploadsLeft, setFreeUploadsLeft] = useState(null);
   const [premium, setPremium] = useState(false);
+
+  // 🔥 Triple‑tap debug gesture
+  const tapCount = useRef(0);
+
+  function handleDebugTap() {
+    tapCount.current++;
+    setTimeout(() => (tapCount.current = 0), 500);
+
+    if (tapCount.current === 3) {
+      router.push("/debug");
+    }
+  }
 
   useEffect(() => {
     async function loadStatus() {
@@ -89,27 +99,32 @@ export default function UploadScreen() {
     <View style={styles.container}>
       {premium && <PremiumBadge />}
 
-      <Text style={styles.title}>Upload a Screenshot of a Text Message or Dating Profile</Text>
+      {/* 🔥 Triple‑tap gesture added here */}
+      <TouchableOpacity activeOpacity={1} onPress={handleDebugTap}>
+        <Text style={styles.title}>
+          Upload a Screenshot of a Text Message or Dating Profile
+        </Text>
+      </TouchableOpacity>
 
       {!premium && freeUploadsLeft !== null && (
         <Text style={styles.counter}>
           You have {freeUploadsLeft} free uploads left today
         </Text>
       )}
-        
-    <Shimmer>
-      <TouchableOpacity
-        style={[styles.uploadButton, isLocked && styles.lockedButton]}
-        onPress={pickImage}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.uploadText}>
-          {isLocked ? "Upload (Locked)" : "Upload Image"}
-        </Text>
 
-        {isLocked && <Text style={styles.lockIcon}>🔒</Text>}
-      </TouchableOpacity>
-    </Shimmer>
+      <Shimmer>
+        <TouchableOpacity
+          style={[styles.uploadButton, isLocked && styles.lockedButton]}
+          onPress={pickImage}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.uploadText}>
+            {isLocked ? "Upload (Locked)" : "Upload Image"}
+          </Text>
+
+          {isLocked && <Text style={styles.lockIcon}>🔒</Text>}
+        </TouchableOpacity>
+      </Shimmer>
     </View>
   );
 }
@@ -156,10 +171,3 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 });
-
-
-
-
-
-
-

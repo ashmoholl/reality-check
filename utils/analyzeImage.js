@@ -1,6 +1,6 @@
 export async function analyzeImage(base64Image) {
   const response = await fetch(
-    "https://reality-check-backend.vercel.app/api/analyze",
+    "https://reality-check-chi.vercel.app/api/analyze",
     {
       method: "POST",
       headers: {
@@ -21,5 +21,4 @@ export async function analyzeImage(base64Image) {
   const data = await response.json();
   return data;
 }
-
 
