@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import LoadingView from "../components/LoadingView";
 import { saveAnalysis } from "../utils/history";
 import { isPremium, canUseFreeUpload, recordFreeUpload } from "../utils/premium";
-import PremiumBadge from "../components/PremiumBadge";
+import PremiumTag from "../components/PremiumTag";   // ⭐ NEW
 import Shimmer from "../components/Shimmer";
 
 export default function UploadScreen() {
@@ -77,8 +77,8 @@ export default function UploadScreen() {
         await recordFreeUpload();
       }
 
-      await saveAnalysis(analysis);
-
+      await saveAnalysis(analysis, base64Image);
+      console.log("Saved analysis:",{summary_title: analysis.summary_title, hasImage: !!base64Image});
       router.push({
         pathname: "/results",
         params: { data: JSON.stringify(analysis) },
@@ -89,6 +89,7 @@ export default function UploadScreen() {
     } finally {
       setLoading(false);
     }
+  
   }
 
   if (loading) {
@@ -97,20 +98,34 @@ export default function UploadScreen() {
 
   return (
     <View style={styles.container}>
-      {premium && <PremiumBadge />}
 
-      {/* 🔥 Triple‑tap gesture added here */}
+      {/* 🔥 Triple‑tap gesture */}
       <TouchableOpacity activeOpacity={1} onPress={handleDebugTap}>
         <Text style={styles.title}>
           Upload a Screenshot of a Text Message or Dating Profile
         </Text>
       </TouchableOpacity>
 
+      {/* ⭐ PremiumTag pill for premium users */}
+      {premium && (
+        <View style={styles.premiumTagWrapper}>
+          <PremiumTag />
+        </View>
+      )}
+
       {!premium && freeUploadsLeft !== null && (
         <Text style={styles.counter}>
           You have {freeUploadsLeft} free uploads left today
         </Text>
       )}
+
+{/* View History Button */}
+<TouchableOpacity
+  style={styles.historyButton}
+  onPress={() => router.push("/history")}
+>
+  <Text style={styles.historyText}>View History</Text>
+</TouchableOpacity>
 
       <Shimmer>
         <TouchableOpacity
@@ -136,21 +151,29 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: "center",
   },
+
+  premiumTagWrapper: {
+    alignItems: "center",
+    marginTop: 12,
+  },
+
   title: {
     fontSize: 28,
     fontWeight: "bold",
     color: "#264653",
-    marginTop: 40,
+    marginTop: 20,
     textAlign: "center",
   },
+
   counter: {
     marginTop: 12,
     fontSize: 16,
     textAlign: "center",
     color: "#6B4F4F",
   },
+
   uploadButton: {
-    marginTop: 40,
+    marginTop: 20,
     backgroundColor: "#2A9D8F",
     paddingVertical: 16,
     borderRadius: 12,
@@ -158,16 +181,33 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
   },
+
   lockedButton: {
     backgroundColor: "#A8A8A8",
   },
+
   uploadText: {
     color: "white",
     fontSize: 18,
     fontWeight: "600",
   },
+
   lockIcon: {
     marginLeft: 8,
     fontSize: 18,
   },
+
+  historyButton: {
+  marginTop: 20,
+  backgroundColor: "#264653",
+  paddingVertical: 14,
+  borderRadius: 12,
+  alignItems: "center",
+},
+
+historyText: {
+  color: "white",
+  fontSize: 16,
+  fontWeight: "700",
+},
 });

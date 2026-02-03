@@ -6,7 +6,7 @@ export default function Screen3() {
     <View style={styles.container}>
       <Text style={styles.title}>How It Works</Text>
       <Text style={styles.subtitle}>
-        Upload a screenshot → get a grounded breakdown → understand the vibe → decide with clarity.
+        Upload a screenshot of a Dating Profile or Text Message → get a breakdown → understand the vibe → decide with clarity.
       </Text>
 
       <TouchableOpacity

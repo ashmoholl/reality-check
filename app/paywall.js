@@ -1,21 +1,44 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+// app/paywall.js
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { useEffect, useState } from "react";
 import * as ScreenCapture from "expo-screen-capture";
-import { setPremium } from "../utils/premium";
+import { isPremium, setPremium } from "../utils/premium";
 
 export default function PaywallScreen() {
   const { reason } = useLocalSearchParams();
   const [title, setTitle] = useState("Unlock Premium");
 
+  // ----------------------------------------------------------
+  // ⭐ FIXED SCREENSHOT LOGIC (safe + clean)
+  // ----------------------------------------------------------
   useEffect(() => {
-    ScreenCapture.preventScreenCaptureAsync();
-    return () => ScreenCapture.allowScreenCaptureAsync();
+    async function protect() {
+      const p = await isPremium();
+      if (!p) {
+        await ScreenCapture.preventScreenCaptureAsync();
+      } else {
+        await ScreenCapture.allowScreenCaptureAsync();
+      }
+    }
+    protect();
+
+    return () => {
+      ScreenCapture.allowScreenCaptureAsync();
+    };
   }, []);
 
+  // Dynamic title based on reason
   useEffect(() => {
     if (reason === "deep-dive") setTitle("Unlock Full Deep Dive");
-    if (reason === "share-card") setTitle("Unlock Share Card");
+    if (reason === "share-card") setTitle("Unlock Premium Features");
   }, [reason]);
 
   async function unlock() {
@@ -29,35 +52,39 @@ export default function PaywallScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#1F2F38" }}>
+      <ScrollView style={styles.container}>
 
-      <Text style={styles.subtitle}>
-        Get unlimited uploads, full Deep Dive analysis, extended archetypes,
-        premium insights, and the shareable Reality Check card.
-      </Text>
+        <Text style={styles.title}>{title}</Text>
 
-      <View style={styles.benefitCard}>
-        <Text style={styles.benefit}>⭐ Unlimited uploads</Text>
-        <Text style={styles.benefit}>⭐ Full Deep Dive breakdown</Text>
-        <Text style={styles.benefit}>⭐ Extended texting archetype</Text>
-        <Text style={styles.benefit}>⭐ Full takeaways & date meter</Text>
-        <Text style={styles.benefit}>⭐ Personalized suggested reply</Text>
-        <Text style={styles.benefit}>⭐ Shareable Reality Check card</Text>
-      </View>
+        <Text style={styles.subtitle}>
+          Get unlimited uploads, full Deep Dive analysis, extended archetypes,
+          premium insights, and the shareable Reality Check card.
+        </Text>
 
-      <TouchableOpacity style={styles.unlockButton} onPress={unlock}>
-        <Text style={styles.unlockText}>Unlock Premium</Text>
-      </TouchableOpacity>
+        <View style={styles.benefitCard}>
+          <Text style={styles.benefit}>⭐ Unlimited uploads</Text>
+          <Text style={styles.benefit}>⭐ Full Deep Dive breakdown</Text>
+          <Text style={styles.benefit}>⭐ Extended texting archetype</Text>
+          <Text style={styles.benefit}>⭐ Full takeaways & date meter</Text>
+          <Text style={styles.benefit}>⭐ Personalized suggested reply</Text>
+          <Text style={styles.benefit}>⭐ Shareable Reality Check cards</Text>
+        </View>
 
-      <TouchableOpacity style={styles.restoreButton} onPress={restore}>
-        <Text style={styles.restoreText}>Restore Purchases</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.unlockButton} onPress={unlock}>
+          <Text style={styles.unlockText}>Unlock Premium</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.back()}>
-        <Text style={styles.back}>← Not Now</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity style={styles.restoreButton} onPress={restore}>
+          <Text style={styles.restoreText}>Restore Purchases</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.back}>← Not Now</Text>
+        </TouchableOpacity>
+
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -67,7 +94,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#1F2F38",
     padding: 24,
   },
-
   title: {
     fontSize: 32,
     fontWeight: "900",
@@ -75,7 +101,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 12,
   },
-
   subtitle: {
     fontSize: 16,
     color: "#E9C46A",
@@ -83,20 +108,17 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     lineHeight: 22,
   },
-
   benefitCard: {
     backgroundColor: "#264653",
     padding: 20,
     borderRadius: 16,
     marginBottom: 24,
   },
-
   benefit: {
     color: "white",
     fontSize: 16,
     marginBottom: 8,
   },
-
   unlockButton: {
     backgroundColor: "#2A9D8F",
     paddingVertical: 16,
@@ -104,13 +126,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-
   unlockText: {
     color: "white",
     fontSize: 18,
     fontWeight: "700",
   },
-
   restoreButton: {
     backgroundColor: "#1F2F38",
     paddingVertical: 14,
@@ -120,13 +140,11 @@ const styles = StyleSheet.create({
     borderColor: "#E9C46A",
     marginBottom: 16,
   },
-
   restoreText: {
     color: "#E9C46A",
     fontSize: 16,
     fontWeight: "700",
   },
-
   back: {
     textAlign: "center",
     color: "#E9C46A",
@@ -134,4 +152,3 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 });
-

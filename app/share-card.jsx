@@ -3,375 +3,282 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
-  Animated,
+  ScrollView,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
-import * as ScreenCapture from "expo-screen-capture";
-import { isPremium } from "../utils/premium";
+import { useRef } from "react";
 import ViewShot from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
-import * as FileSystem from "expo-file-system";
-
-// Premium components
-import PremiumBadge from "../components/PremiumBadge";
-import LockedBadge from "../components/LockedBadge";
-import PremiumTag from "../components/PremiumTag";
 
 export default function ShareCardScreen() {
-  const { data } = useLocalSearchParams();
-  const analysis = JSON.parse(data);
+  const { data, title, body, accent, score, meter, mode } =
+    useLocalSearchParams();
 
-  const [premium, setPremium] = useState(false);
-  const viewShotRef = useRef(null);
+  const analysis = data ? JSON.parse(data) : null;
 
-  // Slide-up animation for premium users
-  const slideAnim = useRef(new Animated.Value(40)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const captureRef = useRef();
 
-  // Screenshot logic:
-  // ❌ Free users: blocked
-  // ✅ Premium users: allowed ONLY here
-  useEffect(() => {
-    async function protect() {
-      const p = await isPremium();
-      setPremium(p);
-
-      if (!p) {
-        await ScreenCapture.preventScreenCaptureAsync();
-      } else {
-        await ScreenCapture.allowScreenCaptureAsync();
-      }
-    }
-    protect();
-
-    return () => ScreenCapture.preventScreenCaptureAsync();
-  }, []);
-
-  // Animate card reveal for premium users
-  useEffect(() => {
-    if (premium) {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [premium]);
-
-  async function saveOrShare() {
+  async function exportImage() {
     try {
-      const uri = await viewShotRef.current.capture();
-      const fileUri = FileSystem.cacheDirectory + "share-card.png";
-
-      await FileSystem.copyAsync({ from: uri, to: fileUri });
-
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(fileUri);
-      } else {
-        Alert.alert("Saved", "Your card has been saved to your device.");
-      }
-    } catch (err) {
-      console.log("SHARE ERROR:", err);
-      Alert.alert("Error", "Something went wrong saving your card.");
+      const uri = await captureRef.current.capture();
+      await Sharing.shareAsync(uri);
+    } catch (e) {
+      console.log("Export error:", e);
     }
   }
 
-  return (
-    <View style={styles.container}>
-
-      {/* Header */}
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>Share Card</Text>
-        {premium && <PremiumTag />}
-      </View>
-
-      <Animated.View
-        style={{
-          transform: [{ translateY: premium ? slideAnim : 0 }],
-          opacity: premium ? opacityAnim : 1,
-        }}
-      >
+  // ----------------------------------------------------------
+  // ⭐ FULL DEEP DIVE EXPORT MODE
+  // ----------------------------------------------------------
+  if (mode === "deep-dive-full" && analysis) {
+    return (
+      <ScrollView style={{ flex: 1, backgroundColor: "#1F2F38" }}>
         <ViewShot
-          ref={viewShotRef}
+          ref={captureRef}
           options={{ format: "png", quality: 1 }}
-          style={{ width: "100%" }}
+          style={styles.fullCardContainer}
         >
-          <View style={styles.card}>
+          <Text style={styles.fullTitle}>Reality Check — Full Deep Dive</Text>
 
-            {/* Premium Badge inside card header */}
-            <View style={styles.cardHeader}>
-              <Text style={styles.badgeText}>Reality Check</Text>
-              {premium && <PremiumBadge />}
-            </View>
+          {/* TEXTING STYLE */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Texting Style Archetype</Text>
+            <Text style={styles.sectionBody}>{analysis.texting_style}</Text>
+          </View>
 
-            {/* Score */}
-            <Text style={styles.score}>{analysis.score ?? "—"}</Text>
+          <View style={styles.divider} />
 
-            {/* Summary */}
-            <Text style={styles.summary}>{analysis.summary}</Text>
+          {/* TRAITS */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Traits</Text>
+            <Text style={styles.sectionBody}>{analysis.archetype_traits}</Text>
+          </View>
 
-            {/* Texting Style */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.label}>Texting Style</Text>
-              </View>
-              <Text style={styles.value}>{analysis.texting_style}</Text>
-            </View>
+          <View style={styles.divider} />
 
-            {/* Vibe Score */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.label}>Vibe Score</Text>
-              </View>
+          {/* STRENGTHS */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Strengths</Text>
+            <Text style={styles.sectionBody}>{analysis.archetype_strengths}</Text>
+          </View>
 
-              <View style={styles.meterBackground}>
-                <View
-                  style={[
-                    styles.meterFill,
-                    {
-                      width: `${analysis.vibe_score * 10}%`,
-                      backgroundColor:
-                        analysis.vibe_score <= 3
-                          ? "#E76F51"
-                          : analysis.vibe_score <= 6
-                          ? "#E9C46A"
-                          : "#2A9D8F",
-                    },
-                  ]}
-                />
-              </View>
+          <View style={styles.divider} />
 
-              <Text
-                style={[
-                  styles.vibeNumber,
-                  {
-                    color:
-                      analysis.vibe_score <= 3
-                        ? "#E76F51"
-                        : analysis.vibe_score <= 6
-                        ? "#E9C46A"
-                        : "#2A9D8F",
-                  },
-                ]}
-              >
-                {analysis.vibe_score}/10
-              </Text>
-            </View>
+          {/* WEAK SPOTS */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Weak Spots</Text>
+            <Text style={styles.sectionBody}>{analysis.archetype_weaknesses}</Text>
+          </View>
 
-            {/* Top 3 Takeaways */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.label}>Top 3 Takeaways</Text>
-                {!premium && <PremiumBadge />}
-              </View>
+          <View style={styles.divider} />
 
-              {premium ? (
-                <Text style={styles.value}>{analysis.takeaways}</Text>
-              ) : (
-                <LockedBadge label="Unlock Full Takeaways" />
-              )}
-            </View>
+          {/* LIKE SIGNALS */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>When They Like You</Text>
+            <Text style={styles.sectionBody}>
+              {analysis.archetype_like_signals}
+            </Text>
+          </View>
 
-            {/* Would We Date Them? */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.label}>Would We Date Them?</Text>
-                {!premium && <PremiumBadge />}
-              </View>
+          <View style={styles.divider} />
 
-              {premium ? (
-                <Text style={styles.value}>{analysis.date_meter}</Text>
-              ) : (
-                <LockedBadge label="Unlock This Insight" />
-              )}
-            </View>
+          {/* PULLBACK SIGNALS */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>When They Pull Back</Text>
+            <Text style={styles.sectionBody}>
+              {analysis.archetype_pullback_signals}
+            </Text>
+          </View>
 
-            {/* Footer */}
-            <Text style={styles.footer}>@RealityCheck</Text>
+          <View style={styles.divider} />
+
+          {/* COMPATIBILITY */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Compatibility Snapshot</Text>
+            <Text style={styles.sectionBody}>
+              {analysis.archetype_compatibility}
+            </Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* VIBE SCORE */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Vibe Score</Text>
+            <Text style={styles.vibeScore}>{analysis.vibe_score}/10</Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* TAKEAWAYS */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Top Takeaways</Text>
+            <Text style={styles.sectionBody}>{analysis.takeaways}</Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* DATE METER */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Would We Date Them?</Text>
+            <Text style={styles.sectionBody}>{analysis.date_meter}</Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* SUGGESTED REPLY */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Suggested Reply</Text>
+            <Text style={styles.sectionBody}>{analysis.suggested_reply}</Text>
           </View>
         </ViewShot>
-      </Animated.View>
 
-      {/* Buttons */}
-      {premium ? (
-        <TouchableOpacity style={styles.saveButton} onPress={saveOrShare}>
-          <Text style={styles.saveText}>Save / Share</Text>
+        <TouchableOpacity style={styles.exportButton} onPress={exportImage}>
+          <Text style={styles.exportText}>Save Full Deep Dive</Text>
         </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          style={styles.unlockButton}
-          onPress={() =>
-            router.push({
-              pathname: "/paywall",
-              params: { reason: "share-card" },
-            })
-          }
-        >
-          <Text style={styles.unlockText}>Unlock Shareable Card</Text>
-        </TouchableOpacity>
-      )}
 
-      {/* Back */}
-      <TouchableOpacity
-        onPress={() =>
-          router.push({
-            pathname: "/deep-dive",
-            params: { data: JSON.stringify(analysis) },
-          })
-        }
+            <TouchableOpacity
+  style={styles.newButton}
+  onPress={() => router.push("/upload")}
+>
+  <Text style={styles.newButtonText}>Start New Analysis</Text>
+</TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.back}>← Back</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    );
+  }
+
+  // ----------------------------------------------------------
+  // ⭐ DEFAULT SINGLE-CARD EXPORT (unchanged)
+  // ----------------------------------------------------------
+  return (
+    <ScrollView style={{ flex: 1, backgroundColor: "#1F2F38" }}>
+      <ViewShot
+        ref={captureRef}
+        options={{ format: "png", quality: 1 }}
+        style={[styles.card, { borderLeftColor: accent || "#E9C46A" }]}
       >
-        <Text style={styles.back}>← Back to Deep Dive</Text>
+        <Text style={styles.cardTitle}>{title}</Text>
+        <Text style={styles.cardBody}>{body}</Text>
+      </ViewShot>
+
+      <TouchableOpacity style={styles.exportButton} onPress={exportImage}>
+        <Text style={styles.exportText}>Save Card</Text>
       </TouchableOpacity>
-    </View>
+
+      <TouchableOpacity onPress={() => router.back()}>
+        <Text style={styles.back}>← Back</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F4E9D8",
-    padding: 24,
-  },
-
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-
-  title: {
-    fontSize: 32,
-    fontWeight: "900",
-    color: "#264653",
-    textAlign: "center",
-  },
-
-  card: {
-    width: "100%",
+  // FULL DEEP DIVE CARD
+  fullCardContainer: {
     backgroundColor: "#264653",
     padding: 28,
-    borderRadius: 20,
-    position: "relative",
+    borderRadius: 22,
+    margin: 24,
   },
 
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-
-  badgeText: {
-    color: "#E9C46A",
-    fontSize: 14,
-    fontWeight: "800",
-    letterSpacing: 1,
-    marginRight: 8,
-  },
-
-  score: {
-    color: "#FF6F61",
-    fontSize: 48,
+  fullTitle: {
+    fontSize: 26,
     fontWeight: "900",
-    marginBottom: 16,
-  },
-
-  summary: {
-    color: "white",
-    fontSize: 18,
-    lineHeight: 26,
+    color: "#E9C46A",
+    textAlign: "center",
     marginBottom: 24,
   },
 
   section: {
-    marginBottom: 22,
+    marginBottom: 16,
   },
 
   sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#E9C46A",
+    marginBottom: 6,
   },
 
-  label: {
-    color: "#E76F51",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-
-  value: {
+  sectionBody: {
     color: "white",
     fontSize: 16,
     lineHeight: 22,
   },
 
-  meterBackground: {
-    width: "100%",
-    height: 10,
-    backgroundColor: "#1F2F38",
-    borderRadius: 6,
-    overflow: "hidden",
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(233,196,106,0.25)",
+    marginVertical: 12,
   },
 
-  meterFill: {
-    height: "100%",
+  vibeScore: {
+    fontSize: 28,
+    fontWeight: "900",
+    color: "#E9C46A",
   },
 
-  vibeNumber: {
-    marginTop: 8,
+  // SINGLE CARD (unchanged)
+  card: {
+    backgroundColor: "#264653",
+    padding: 24,
+    borderRadius: 20,
+    margin: 24,
+    borderLeftWidth: 6,
+  },
+
+  cardTitle: {
     fontSize: 22,
     fontWeight: "800",
-  },
-
-  footer: {
-    marginTop: 30,
     color: "#E9C46A",
-    fontSize: 14,
-    fontWeight: "700",
-    textAlign: "right",
+    marginBottom: 12,
   },
 
-  unlockButton: {
-    marginTop: 20,
-    backgroundColor: "#E76F51",
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-
-  unlockText: {
+  cardBody: {
     color: "white",
     fontSize: 16,
-    fontWeight: "700",
+    lineHeight: 22,
   },
 
-  saveButton: {
-    marginTop: 20,
+  // BUTTONS
+  exportButton: {
     backgroundColor: "#2A9D8F",
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 16,
+    borderRadius: 14,
     alignItems: "center",
+    marginHorizontal: 24,
+    marginBottom: 16,
   },
 
-  saveText: {
+  exportText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "700",
   },
+
+  newButton: {
+  backgroundColor: "#264653",
+  paddingVertical: 14,
+  borderRadius: 12,
+  alignItems: "center",
+  marginHorizontal: 24,
+  marginBottom: 16,
+},
+
+newButtonText: {
+  color: "white",
+  fontSize: 16,
+  fontWeight: "700",
+},
 
   back: {
-    marginTop: 20,
     textAlign: "center",
-    color: "#264653",
+    color: "#E9C46A",
     fontSize: 16,
+    marginBottom: 40,
   },
 });

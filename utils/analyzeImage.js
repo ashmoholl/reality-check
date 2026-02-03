@@ -1,6 +1,6 @@
 export async function analyzeImage(base64Image) {
   const response = await fetch(
-    "https://reality-check-chi.vercel.app/api/analyze",
+    "https://reality-check-backend.vercel.app/analyze",
     {
       method: "POST",
       headers: {

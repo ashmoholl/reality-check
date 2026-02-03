@@ -1,8 +1,8 @@
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { analyzeImage } from "../utils/analyzeImage";
-import { saveAnalysis } from "../utils/history";   // ⭐ REQUIRED
-import { useEffect } from "react";                 // ⭐ REQUIRED
+import { saveAnalysis } from "../utils/history";
+import { useEffect } from "react";
 
 export default function AnalyzeScreen() {
   const { base64 } = useLocalSearchParams();
@@ -13,7 +13,8 @@ export default function AnalyzeScreen() {
       try {
         const result = await analyzeImage(base64);
 
-        await saveAnalysis(result); // ⭐ Save to history
+        // ⭐ FIX: Save with image
+        await saveAnalysis(result, base64);
 
         router.replace({
           pathname: "/results",
@@ -50,6 +51,3 @@ const styles = StyleSheet.create({
     color: "#4A3F35",
   },
 });
-
-
-
